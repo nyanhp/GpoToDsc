@@ -1,6 +1,6 @@
 environment:
   nugetapikey:
-    secure: OX4AxdrgR7cWD+b3x/ZcjN87ij7UM1+HYsd/L3CJKxAkJ2ZEX3lIgvWDuoTMcKNM
+    secure: 6oLf98tZvptVVtWtXbaWwyKSYQN62R5P990RAP695b32jZc2ZlaMGdJkmqCEFkyH
 
 version: 1.0.{build}
 
