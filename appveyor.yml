@@ -9,7 +9,7 @@ skip_branch_with_pr: true
 build: false
 image: Visual Studio 2017
 
-before_build:
+before_test:
   - ps: |
         . (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'build\all-prerequisites.ps1' -Resolve -ErrorAction Stop)
         Add-AppveyorMessage -Message "Setting version number in files" -Category Information
