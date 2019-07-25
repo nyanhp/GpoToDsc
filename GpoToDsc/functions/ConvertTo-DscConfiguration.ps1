@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Generate DSC configuration from PolicyRules XML
 .DESCRIPTION
@@ -20,6 +20,13 @@
 .PARAMETER Precedence
     The precedence of layers e.g.
     @('Baseline'), @('Baseline', 'DC')
+.PARAMETER Pattern
+    The pattern to split the basename of each policy export with
+.PARAMETER LayerIndex
+    At which index of the split basename is the name of the layer?
+.PARAMETER SkipMerge
+    Indicates that the precedence and layers should not be used. Instead, each individual file will be converted
+    to a DSC configuration
 .EXAMPLE
     .\ConvertTo-DscConfiguration.ps1 -Path D:\pol
 
@@ -46,8 +53,7 @@ function ConvertTo-DscConfiguration
         $SkipMerge,
 
         [object[]]
-        $Precedence = 
-        @(
+        $Precedence = @(
             @('Baseline'),
             @('Baseline', 'DC'),
             @('Baseline', 'Server'),
