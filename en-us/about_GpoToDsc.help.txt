@@ -1,0 +1,17 @@
+﻿TOPIC
+	about_GpoToDsc
+	
+SHORT DESCRIPTION
+	GpoToDsc is a small helper module to convert GPO to DSC
+
+LONG DESCRIPTION
+	GpoToDsc is a small helper module to convert GPOs in the PolicyRules format to DSC configurations.
+
+	PolicyRules can be exported using the Microsoft Security Compliance Kit (https://www.microsoft.com/en-us/download/details.aspx?id=55319)
+	Please note that this module is not capable yet of converting any old GPO to DSC, unless
+	it comes in the right format.
+
+	To be able to export MOF files, please install the modules SecurityPolicyDsc and AuditPolicyDsc
+	
+KEYWORDS
+	DSC GPO
