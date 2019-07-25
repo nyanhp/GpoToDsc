@@ -11,6 +11,7 @@ image: Visual Studio 2017
 
 before_test:
   - ps: |
+        Get-ChildItem -Path env:\APPVEYOR*
         . (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'build\all-prerequisites.ps1' -Resolve -ErrorAction Stop)
         Add-AppveyorMessage -Message "Setting version number in files" -Category Information
         gci -Filter *.psd1 -Recurse | foreach {(Get-Content $_.FullName -Raw) -replace "ModuleVersion += '\d\.\d\.\d'", "ModuleVersion = '$env:APPVEYOR_BUILD_VERSION'" | Out-File $_.FullName}
