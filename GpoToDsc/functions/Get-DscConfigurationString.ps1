@@ -1,8 +1,8 @@
-<#
+﻿<#
 .SYNOPSIS
     Convert array of policy rule entries to a DSC configuration script
 .DESCRIPTION
-    Convert array of policy rule entries to a DSC configuration script 
+    Convert array of policy rule entries to a DSC configuration script
 .PARAMETER ConfigurationItem
     The list of configuration items
 .PARAMETER ConfigurationName
@@ -39,10 +39,10 @@ function Get-DscConfigurationString
 
     process
     {
-        $count = 0 
+        $count = 0
         foreach ($item in $ConfigurationItem)
         {
-            $item | Out-String | Write-Verbose
+            Write-PSFMessage -Message ($item | Out-String)
             switch ($item.ObjectType)
             {
                 'RegistryItem'
@@ -88,7 +88,7 @@ function Get-DscConfigurationString
             
             $null = $string.AppendLine( '' )
             $null = $string.AppendLine( '' )
-        }        
+        }
     }
 
     end

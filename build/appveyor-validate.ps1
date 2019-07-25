@@ -5,10 +5,3 @@
 
 # Run internal pester tests
 & "$PSScriptRoot\..\GpoToDsc\tests\pester.ps1"
-$testFiles = Get-Item -Path (Join-Path "$PSScriptRoot\..\TestResults" "TEST-*.xml")
-foreach ($file in $testFiles)
-{
-    (New-Object 'System.Net.WebClient').UploadFile(
-        "https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)",
-        "$file" )
-}

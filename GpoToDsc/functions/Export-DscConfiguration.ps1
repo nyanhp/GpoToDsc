@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Export a configuration string to a PS1 file and build a MOF
 .DESCRIPTION

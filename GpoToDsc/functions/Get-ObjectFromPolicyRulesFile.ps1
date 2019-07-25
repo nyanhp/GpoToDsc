@@ -1,4 +1,4 @@
-<#
+﻿<#
 .SYNOPSIS
     Convert PolicyRules XML content to objects
 .DESCRIPTION
@@ -48,9 +48,9 @@ function Get-ObjectFromPolicyRulesFile
                 if ($split2[0] -eq 7) { continue }
 
                 $valueData = $split2 | Select-Object -Skip 1
-                if ($valueData -eq '\0') 
+                if ($valueData -eq '\0')
                 {
-                    $valueData = [string]::Empty 
+                    $valueData = [string]::Empty
                 }
                 elseif ($valueData -like '*\0')
                 {
@@ -61,7 +61,7 @@ function Get-ObjectFromPolicyRulesFile
                     ResourceName = "Registry '$($policyName)_$(Split-Path -Leaf -Path $split1[0])_$((New-Guid).Guid)'"
                     Key          = $('HKEY_LOCAL_{0}' -f (Split-Path -Parent -Path $split1[0]))
                     ValueName    = $(Split-Path -Leaf -Path $split1[0])
-                    ValueData    = $valueData 
+                    ValueData    = $valueData
                     ValueType    = $valueType
                     ObjectType   = 'RegistryItem'
                     PolicyName   = $policyName
@@ -72,9 +72,9 @@ function Get-ObjectFromPolicyRulesFile
             {
                 $valueData = $item.RegData
 
-                if ($valueData -eq '\0') 
+                if ($valueData -eq '\0')
                 {
-                    $valueData = [string]::Empty 
+                    $valueData = [string]::Empty
                 }
                 elseif ($valueData -like '*\0*')
                 {
@@ -111,9 +111,9 @@ function Get-ObjectFromPolicyRulesFile
                 if ([string]::IsNullOrWhiteSpace($sids) -or ($sids -split ',').Count -eq 0) { continue }
                 $translatedToken = $mapping[$tokenKind]
 
-                if ($null -eq $translatedToken) 
-                { 
-                    Write-Warning -Message "Could not translate $tokenKind"
+                if ($null -eq $translatedToken)
+                {
+                    Write-PSFMessage -Level Warning -Message "Could not translate $tokenKind"
                     continue
                 }
 
@@ -390,7 +390,7 @@ function Get-ObjectFromPolicyRulesFile
 
                         break
                     }
-                    default { Write-Warning -Message "Could not guess policy for setting $setting with value $settingvalue. Please examine the output of 'Get-DscResource -Syntax -Name SecurityOption'." }
+                    default { Write-PSFMessage -Level Warning -Message "Could not guess policy for setting $setting with value $settingvalue. Please examine the output of 'Get-DscResource -Syntax -Name SecurityOption'." }
                 }
 
             }

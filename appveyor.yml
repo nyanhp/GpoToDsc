@@ -1,20 +1,20 @@
 environment:
-  NuGetApiKey:
-    secure: OX4AxdrgR7cWD+b3x/ZcjN87ij7UM1+HYsd/L3CJKxAkJ2ZEX3lIgvWDuoTMcKNM
+  nugetapikey:
+    secure: 6oLf98tZvptVVtWtXbaWwyKSYQN62R5P990RAP695b32jZc2ZlaMGdJkmqCEFkyH
 
 version: 1.0.{build}
 
 skip_tags: true
 skip_branch_with_pr: true
-
+build: false
 image: Visual Studio 2017
 
-before_build:
+before_test:
   - ps: |
+        Get-ChildItem -Path env:\APPVEYOR*
         . (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'build\all-prerequisites.ps1' -Resolve -ErrorAction Stop)
         Add-AppveyorMessage -Message "Setting version number in files" -Category Information
         gci -Filter *.psd1 -Recurse | foreach {(Get-Content $_.FullName -Raw) -replace "ModuleVersion += '\d\.\d\.\d'", "ModuleVersion = '$env:APPVEYOR_BUILD_VERSION'" | Out-File $_.FullName}
-
 
 # Skip on updates to the readme.
 # We can force this by adding [skip ci] or [ci skip] anywhere in commit message
@@ -25,5 +25,5 @@ skip_commits:
 test_script:
   - ps:  . (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'build\appveyor-validate.ps1' -Resolve -ErrorAction Stop)
 
-build_script:
-  - ps:  . (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'build\appveyor-build.ps1' -Resolve -ErrorAction Stop) -ApiKey $env:NuGetApiKey
+after_test:
+  - ps:  . (Join-Path -Path $env:APPVEYOR_BUILD_FOLDER -ChildPath 'build\appveyor-build.ps1' -Resolve -ErrorAction Stop)

@@ -5,7 +5,7 @@ It expects as input an ApiKey authorized to publish the module.
 Insert any build steps you may need to take before publishing it here.
 #>
 param (
-	$ApiKey,
+	$ApiKey = $env:nugetapikey,
 
 	$WorkingDirectory = $env:APPVEYOR_BUILD_FOLDER
 )
@@ -68,7 +68,7 @@ $fileData = $fileData.Replace('"<compile code into here>"', ($text -join "`n`n")
 #endregion Update the psm1 file
 
 # Publish to Gallery
-if ($env:APPVEYOR_REPO_BRANCH -eq 'master')
+if ($env:APPVEYOR_REPO_BRANCH -eq 'master' -and [string]::IsNullOrWhiteSpace($env:APPVEYOR_PULL_REQUEST_NUMBER))
 {
 	Publish-Module -Path "$($publishDir.FullName)\GpoToDsc" -NuGetApiKey $ApiKey -Force
 }
