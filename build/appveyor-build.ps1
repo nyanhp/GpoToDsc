@@ -68,7 +68,7 @@ $fileData = $fileData.Replace('"<compile code into here>"', ($text -join "`n`n")
 #endregion Update the psm1 file
 
 # Publish to Gallery
-if ($env:APPVEYOR_REPO_BRANCH -eq 'master' -and $env:APPVEYOR_PULL_REQUEST_TITLE -notlike '*Pull*Request*')
+if ($env:APPVEYOR_REPO_BRANCH -eq 'master' -and [string]::IsNullOrWhiteSpace($env:APPVEYOR_PULL_REQUEST_NUMBER))
 {
 	Publish-Module -Path "$($publishDir.FullName)\GpoToDsc" -NuGetApiKey $ApiKey -Force
 }
