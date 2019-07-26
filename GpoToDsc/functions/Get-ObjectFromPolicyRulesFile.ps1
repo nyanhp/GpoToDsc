@@ -179,13 +179,13 @@ function Get-ObjectFromPolicyRulesFile
                 # to replace two real policy names with some made-up names that someone deemed fitting
                 # Name in gpedit.msc and exports: PNP Activity vs made-up name Plug and Play Events
                 # Name in gpedit.msc and exports: Token Right Adjusted vs made-up name Token Right Adjusted Events
-                if ($flag -eq 'PNP Activity')
+                if ($name -eq 'PNP Activity')
                 {
-                    $flag = 'Plug and Play Events'
+                    $name = 'Plug and Play Events'
                 }
-                elseif ($flag -eq 'Token Right Adjusted')
+                elseif ($name -eq 'Token Right Adjusted')
                 {
-                    $flag = 'Token Right Adjusted Events'
+                    $name = 'Token Right Adjusted Events'
                 }
                 
                 $result = [PSCustomObject]@{
