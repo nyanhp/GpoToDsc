@@ -24,6 +24,7 @@ function Get-ObjectFromPolicyRulesFile
     {
         foreach ($file in $Path)
         {
+            $resultList = [System.Collections.ArrayList]::new()
             [xml]$content = Get-Content -Path $file -Encoding UTF8
             $policyName = [IO.Path]::GetFileNameWithoutExtension($file)
 
@@ -57,15 +58,27 @@ function Get-ObjectFromPolicyRulesFile
                     $valueData = $valueData -split '\\0'
                 }
 
-                [PSCustomObject]@{
+                $regKey = $('HKEY_LOCAL_{0}' -f (Split-Path -Parent -Path $split1[0]))
+
+                $result = [PSCustomObject]@{
                     ResourceName = "Registry '$($policyName)_$(Split-Path -Leaf -Path $split1[0])_$((New-Guid).Guid)'"
-                    Key          = $('HKEY_LOCAL_{0}' -f (Split-Path -Parent -Path $split1[0]))
+                    Key          = $regKey
                     ValueName    = $(Split-Path -Leaf -Path $split1[0])
                     ValueData    = $valueData
                     ValueType    = $valueType
                     ObjectType   = 'RegistryItem'
                     PolicyName   = $policyName
                 }
+
+                $existingItem = $resultList | Where-Object -FilterScript { $_.ObjectType -eq 'RegistryItem' -and $_.Key -eq $regKey }
+
+                if ($null -ne $existingItem)
+                {
+                    $existingItem = $result
+                    continue
+                }
+                
+                $null = $resultList.Add($result)
             }
 
             foreach ($item in $content.SelectNodes('/PolicyRules/ComputerConfig'))
@@ -83,15 +96,23 @@ function Get-ObjectFromPolicyRulesFile
 
                 $valueType = switch ($item.RegType)
                 {
-                    'REG_DWORD' { 'Dword' }
-                    'REG_QWORD' { 'Qword' }
-                    'REG_MULTI_SZ' { 'Multistring' }
-                    'REG_SZ' { 'String' }
-                    'REG_BINARY' { 'Binary' }
-                    'REG_EXPAND_SZ' { 'ExpandedString' }
+                    'REG_DWORD' { 'Dword'; break }
+                    'REG_QWORD' { 'Qword'; break }
+                    'REG_MULTI_SZ' { 'Multistring'; break }
+                    'REG_SZ' { 'String'; break }
+                    'REG_BINARY' { 'Binary'; break }
+                    'REG_EXPAND_SZ' { 'ExpandString'; break }
+                    default { Write-PSFMessage -Level Warning -Message "Skipping HKEY_LOCAL_MACHINE\$($item.Key) as it is REG_NONE" }
                 }
 
-                [PSCustomObject]@{
+                if ($null -eq $valueType)
+                {
+                    continue
+                }
+
+                $regKey = "HKEY_LOCAL_MACHINE\$($item.Key)"
+
+                $result = [PSCustomObject]@{
                     ResourceName = "Registry '$($policyName)_$($item.Value)_$((New-Guid).Guid)'"
                     Key          = "HKEY_LOCAL_MACHINE\$($item.Key)"
                     ValueName    = "$($item.Value)"
@@ -100,6 +121,16 @@ function Get-ObjectFromPolicyRulesFile
                     ObjectType   = 'RegistryItem'
                     PolicyName   = $policyName
                 }
+
+                $existingItem = $resultList | Where-Object -FilterScript { $_.ObjectType -eq 'RegistryItem' -and $_.Key -eq $regKey }
+
+                if ($null -ne $existingItem)
+                {
+                    $existingItem = $result
+                    continue
+                }
+                
+                $null = $resultList.Add($result)
             }
             #endregion
 
@@ -117,13 +148,23 @@ function Get-ObjectFromPolicyRulesFile
                     continue
                 }
 
-                [PSCustomObject]@{
+                $result = [PSCustomObject]@{
                     Policy       = $translatedToken
                     Identity     = $sids -split ','
                     ResourceName = "UserRightsAssignment '$($policyName)_$($tokenKind)_$((New-Guid).Guid)'"
                     ObjectType   = 'UserRightsAssignment'
                     PolicyName   = $policyName
                 }
+
+                $existingItem = $resultList | Where-Object -FilterScript { $_.ObjectType -eq 'UserRightsAssignment' -and $_.Policy -eq $translatedToken }
+
+                if ($null -ne $existingItem)
+                {
+                    $existingItem = $result
+                    continue
+                }
+                
+                $null = $resultList.Add($result)
             }
             #endregion
 
@@ -133,13 +174,24 @@ function Get-ObjectFromPolicyRulesFile
                 if ([string]::IsNullOrWhiteSpace($item.Setting)) { continue }
                 $name = $item.Name -replace '^Audit '
                 $flag = ([System.Security.AccessControl.AuditFlags][int]$item.Setting).ToString() -replace ',', ' And' -replace 'None', 'No Auditing'
-                [PSCustomObject]@{
+                
+                $result = [PSCustomObject]@{
                     ResourceName = "AuditPolicyGUID '$($policyName)_$($name)-$($flag)_$((New-Guid).Guid)'"
                     AuditFlag    = $flag
                     Name         = $name
                     ObjectType   = 'AuditPol'
                     PolicyName   = $policyName
                 }
+
+                $existingItem = $resultList | Where-Object -FilterScript { $_.ObjectType -eq 'AuditPol' -and ($_.Name -eq $name -and $_.AuditFlag -eq $flag) }
+
+                if ($null -ne $existingItem)
+                {
+                    $existingItem = $result
+                    continue
+                }
+                
+                $null = $resultList.Add($result)
             }
             #endregion
 
@@ -148,7 +200,7 @@ function Get-ObjectFromPolicyRulesFile
             {
                 $setting, $settingvalue = $item -split '='
 
-                switch ($setting)
+                $result = switch ($setting)
                 {
                     NewGuestName
                     {
@@ -371,7 +423,7 @@ function Get-ObjectFromPolicyRulesFile
                         [PSCustomObject]@{
                             ResourceName = "AccountPolicy '$($policyName)_$($setting)_$((New-Guid).Guid)'"
                             SettingName  = $mapping[$setting]
-                            SettingValue = if ( $settingValue -eq 0) { "Disabled" } else { "Enabled" }
+                            SettingValue = $settingValue
                             ObjectType   = 'SecurityOptions'
                             PolicyName   = $policyName
                         }
@@ -393,9 +445,14 @@ function Get-ObjectFromPolicyRulesFile
                     default { Write-PSFMessage -Level Warning -Message "Could not guess policy for setting $setting with value $settingvalue. Please examine the output of 'Get-DscResource -Syntax -Name SecurityOption'." }
                 }
 
+                if ($null -ne $result)
+                {
+                    $null = $resultList.Add($result)
+                }
             }
-
             #endregion
         }
+        
+        $resultList
     }
 }
