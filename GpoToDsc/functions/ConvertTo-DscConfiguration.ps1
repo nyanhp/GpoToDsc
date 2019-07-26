@@ -87,10 +87,10 @@ function ConvertTo-DscConfiguration
 
             $policyItems = $gpoFiles.$innerLayer | Get-ObjectFromPolicyRulesFile
             $null = New-Variable -Name "$($innerLayer)items" -Value @{
-                RegistryItems        = $policyItems.Where( { $_.ObjectType -eq 'RegistryItem' })
-                UserRightsAssignment = $policyItems.Where( { $_.ObjectType -eq 'UserRightsAssignment' })
-                SecurityOptions      = $policyItems.Where( { $_.ObjectType -eq 'SecurityOptions' })
-                AuditPol             = $policyItems.Where( { $_.ObjectType -eq 'AuditPol' })
+                RegistryItems        = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'RegistryItem' } | Sort-Object -Unique -Property Key,ValueName
+                UserRightsAssignment = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'UserRightsAssignment' } | Sort-Object -Unique -Property Policy
+                SecurityOptions      = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'SecurityOptions' } | Sort-Object -Unique -Property SettingName
+                AuditPol             = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'AuditPol' } | Sort-Object -Unique -Property AuditFlag
             }
 
             if ($layer[0] -ne $innerLayer)
