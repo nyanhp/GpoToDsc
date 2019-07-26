@@ -174,6 +174,19 @@ function Get-ObjectFromPolicyRulesFile
                 if ([string]::IsNullOrWhiteSpace($item.Setting)) { continue }
                 $name = $item.Name -replace '^Audit '
                 $flag = ([System.Security.AccessControl.AuditFlags][int]$item.Setting).ToString() -replace ',', ' And' -replace 'None', 'No Auditing'
+
+                # Due to a very questionable design choice in AuditPolicyDsc, we have
+                # to replace two real policy names with some made-up names that someone deemed fitting
+                # Name in gpedit.msc and exports: PNP Activity vs made-up name Plug and Play Events
+                # Name in gpedit.msc and exports: Token Right Adjusted vs made-up name Token Right Adjusted Events
+                if ($flag -eq 'PNP Activity')
+                {
+                    $flag = 'Plug and Play Events'
+                }
+                elseif ($flag -eq 'Token Right Adjusted')
+                {
+                    $flag = 'Token Right Adjusted Events'
+                }
                 
                 $result = [PSCustomObject]@{
                     ResourceName = "AuditPolicyGUID '$($policyName)_$($name)-$($flag)_$((New-Guid).Guid)'"
