@@ -112,6 +112,11 @@ function Get-ObjectFromPolicyRulesFile
 
                 $regKey = "HKEY_LOCAL_MACHINE\$($item.Key)"
 
+                if ($valueType -eq 'MultiString' -and [string]::IsNullOrWhiteSpace($valueData))
+                {
+                    $valueData = @()
+                }
+
                 $result = [PSCustomObject]@{
                     ResourceName = "Registry '$($policyName)_$($item.Value)_$((New-Guid).Guid)'"
                     Key          = "HKEY_LOCAL_MACHINE\$($item.Key)"

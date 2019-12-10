@@ -24,7 +24,7 @@
     PowerShellVersion = '5.0'
 	
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules   = @(@{ ModuleName = 'PSFramework'; ModuleVersion = '1.0.19' })
+    RequiredModules   = @(@{ ModuleName = 'PSFramework'; ModuleVersion = '1.0.59' })
 	
     # Assemblies that must be loaded prior to importing this module
     # RequiredAssemblies = @('bin\GpoToDsc.dll')
@@ -38,7 +38,7 @@
     # FormatsToProcess = @('xml\GpoToDsc.Format.ps1xml')
 	
     # Functions to export from this module
-    FunctionsToExport = 'Export-DscConfiguration', 'Get-ObjectFromPolicyRulesFile', 'Get-DscConfigurationString', 'ConvertTo-DscConfiguration'
+    FunctionsToExport = 'Export-DscConfiguration', 'Get-ObjectFromPolicyRulesFile', 'Get-DscConfigurationString', 'ConvertTo-DscConfiguration', 'Get-PesterString'
 	
     # Cmdlets to export from this module
     CmdletsToExport   = ''
