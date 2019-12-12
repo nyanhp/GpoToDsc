@@ -3,7 +3,7 @@
     ModuleToProcess   = 'GpoToDsc.psm1'
 	
     # Version number of this module.
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.1.0'
 	
     # ID used to uniquely identify this module
     GUID              = '13049ea4-96d6-4ab1-91c6-7c895c2ae66f'
