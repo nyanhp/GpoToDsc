@@ -29,8 +29,6 @@
     to a DSC configuration
 .PARAMETER Pester
     Export Pester config
-.PARAMETER DscConfiguration
-    Export configuration
 .EXAMPLE
     .\ConvertTo-G2DValidation.ps1 -Path D:\pol
 
@@ -46,7 +44,7 @@
 #>
 function ConvertTo-G2DValidation
 {
-    [CmdletBinding(DefaultParameterSetName = 'dsc')]
+    [CmdletBinding()]
     [OutputType([ValidationItem])]
     param
     (
@@ -71,19 +69,14 @@ function ConvertTo-G2DValidation
         [uint16]
         $LayerIndex = 4,
 
-        [Parameter(Mandatory, ParameterSetName = 'pester')]
         [switch]
-        $Pester,
-
-        [Parameter(ParameterSetName = 'dsc')]
-        [switch]
-        $DscConfiguration
+        $Pester
     )
 
     if ($SkipMerge)
     {
         $policyItems = Get-ChildItem -Path $Path -File -Filter *.PolicyRules | Get-G2DObjectFromPolicyRulesFile
-        if ($PSCmdlet.ParameterSetName -eq 'pester')
+        if ($Pester.IsPresent)
         {
             $policyItems | Group-Object -Property PolicyName | ForEach-Object {
                 $cName = $_.Name
@@ -94,17 +87,14 @@ function ConvertTo-G2DValidation
                 )
             }
         }
-
-        if ($PSCmdlet.ParameterSetName -eq 'dsc')
-        {
-            $policyItems | Group-Object -Property PolicyName | ForEach-Object {
-                $cName = $_.Name -replace '\s'
-                [ValidationItem]::new(
-                    ($_.Group | Get-G2DDscConfigurationString -ConfigurationName $cName),
-                    $cName,
-                    'Dsc'
-                )
-            }
+        
+        $policyItems | Group-Object -Property PolicyName | ForEach-Object {
+            $cName = $_.Name -replace '\s'
+            [ValidationItem]::new(
+                ($_.Group | Get-G2DDscConfigurationString -ConfigurationName $cName),
+                $cName,
+                'Dsc'
+            )
         }
 
         return
@@ -174,7 +164,7 @@ function ConvertTo-G2DValidation
 
         $layer0Clone = Get-Variable -Name "$($layer[0])items" -ValueOnly
 
-        if ($PSCmdlet.ParameterSetName -eq 'pester')
+        if ($Pester.IsPresent)
         {
             [ValidationItem]::new(
                 (Get-G2DPesterString -ConfigurationItem ($layer0Clone.RegistryItems + $layer0Clone.SecurityOptions + $layer0Clone.UserRightsAssignment + $layer0Clone.AuditPol) -ConfigurationName $exportName),
@@ -182,14 +172,11 @@ function ConvertTo-G2DValidation
                 'Pester'
             )
         }
-
-        if ($PSCmdlet.ParameterSetName -eq 'dsc')
-        {
-            [ValidationItem]::new(
-                (Get-G2DDscConfigurationString -ConfigurationItem ($layer0Clone.RegistryItems + $layer0Clone.SecurityOptions + $layer0Clone.UserRightsAssignment + $layer0Clone.AuditPol) -ConfigurationName $exportName ),
-                ($exportName -replace '\s'),
-                'Dsc'
-            )
-        }
+        
+        [ValidationItem]::new(
+            (Get-G2DDscConfigurationString -ConfigurationItem ($layer0Clone.RegistryItems + $layer0Clone.SecurityOptions + $layer0Clone.UserRightsAssignment + $layer0Clone.AuditPol) -ConfigurationName $exportName ),
+            ($exportName -replace '\s'),
+            'Dsc'
+        )
     }
 }

@@ -53,7 +53,7 @@ function New-G2DArchive
     {
         if ($ValidationObject.ValidationType -contains 'Pester' -and -not (Test-Path -Path (Join-Path -Path $moduleFolder -ChildPath Pester)))
         {
-            Save-Module -Name Pester -Path $moduleFolder -Repository PSGallery
+            Save-Module -Name Pester,Format-Pester -Path $moduleFolder -Repository PSGallery
         }
 
         foreach ($vObject in $ValidationObject)
