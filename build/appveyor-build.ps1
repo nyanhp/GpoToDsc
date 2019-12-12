@@ -60,29 +60,6 @@ foreach ($line in (Get-Content "$($PSScriptRoot)\filesAfter.txt" | Where-Object 
 }
 #endregion Gather text data to compile
 
-# Compile library
-mkdir -force "$($publishDir.FullName)\GpoToDsc\library"
-Add-Type -TypeDefinition @'
-public class ValidationItem
-{
-    string ValidationString {get; set;}
-    string ConfigurationName {get; set;}
-    string ValidationType {get; set;}
-
-    ValidationItem (string valString, string confName, string valType)
-    {
-        ValidationString = valString;
-        ConfigurationName = confName;
-        ValidationType = valType;
-    }
-
-    public override string ToString()
-    {
-        return ValidationString;
-    }
-}
-'@ -OutputAssembly "$($publishDir.FullName)\GpoToDsc\library\lib.dll"
-
 #region Update the psm1 file
 $fileData = Get-Content -Path "$($publishDir.FullName)\GpoToDsc\GpoToDsc.psm1" -Raw
 $fileData = $fileData.Replace('"<was not compiled>"', '"<was compiled>"')
