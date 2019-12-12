@@ -14,11 +14,11 @@
 .PARAMETER Confirm
     Indicates that you want a confirmation before anything bad happens.
 .EXAMPLE
-    ConvertTo-DscConfiguration -Path ./blorb -SkipMerge | Export-DscConfiguration -Path ./export -Force
+    ConvertTo-G2DValidation -Path ./blorb -SkipMerge | Export-G2DConfiguration -Path ./export -Force
 
     Converts a bunch of PolicyRules files to DSC code and exports all configurations and their MOFs
 #>
-function Export-DscConfiguration
+function Export-G2DConfiguration
 {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
     param
@@ -28,7 +28,7 @@ function Export-DscConfiguration
         $Path,
 
         [Parameter(Mandatory, ValueFromPipeline)]
-        [string]
+        [ValidationItem]
         $Configuration,
 
         [switch]
@@ -51,8 +51,8 @@ function Export-DscConfiguration
             break
         }
         
-        $configurationScript = [scriptblock]::Create($Configuration)
-        $configurationName = $configurationScript.Ast.FindAll( { $args[0] -is [System.Management.Automation.Language.ConfigurationDefinitionAst] }, $true).InstanceName
+        $configurationScript = [scriptblock]::Create($Configuration.ToString())
+        $configurationName = $Configuration.ConfigurationName
         
         if ($PSCmdlet.ShouldProcess($configurationName, 'Export configuration and compile MOF'))
         {

@@ -11,7 +11,7 @@
 
     The layer index after the split would be 3, so the cmdlet could be called thusly:
 
-    ConvertTo-DscConfigurations -Path . -Pattern ' - ' -LayerIndex 3 -Precendence @(@('Baseline'), @('Baseline', 'DC'))
+    ConvertTo-G2DValidations -Path . -Pattern ' - ' -LayerIndex 3 -Precendence @(@('Baseline'), @('Baseline', 'DC'))
 
     The layers called Baseline and the merger of DC onto Baseline will be converted to DSC configurations
 
@@ -27,8 +27,12 @@
 .PARAMETER SkipMerge
     Indicates that the precedence and layers should not be used. Instead, each individual file will be converted
     to a DSC configuration
+.PARAMETER Pester
+    Export Pester config
+.PARAMETER DscConfiguration
+    Export configuration
 .EXAMPLE
-    .\ConvertTo-DscConfiguration.ps1 -Path D:\pol
+    .\ConvertTo-G2DValidation.ps1 -Path D:\pol
 
     Without further parameter uses the split regex ' - ', the layer index 4 and the following precedence rules:
         @('Baseline'),
@@ -36,13 +40,14 @@
         @('Baseline', 'Server'),
         @('Baseline', 'Client')
 .EXAMPLE
-    .\ConvertTo-DscConfiguration.ps1 -Path D:\pol -SkipMerge
+    .\ConvertTo-G2DValidation.ps1 -Path D:\pol -SkipMerge
 
     Converts each item to a DSC configuration.
 #>
-function ConvertTo-DscConfiguration
+function ConvertTo-G2DValidation
 {
-    [CmdletBinding(DefaultParameterSetName = 'Precedence')]
+    [CmdletBinding(DefaultParameterSetName = 'dsc')]
+    [OutputType([ValidationItem])]
     param
     (
         [Parameter(Mandatory)]
@@ -64,13 +69,45 @@ function ConvertTo-DscConfiguration
         $Pattern = ' - ',
 
         [uint16]
-        $LayerIndex = 4
+        $LayerIndex = 4,
+
+        [Parameter(Mandatory, ParameterSetName = 'pester')]
+        [switch]
+        $Pester,
+
+        [Parameter(ParameterSetName = 'dsc')]
+        [switch]
+        $DscConfiguration
     )
 
     if ($SkipMerge)
     {
-        $policyItems = Get-ChildItem -Path $Path -File -Filter *.PolicyRules | Get-ObjectFromPolicyRulesFile
-        return $policyItems | Group-Object -Property PolicyName | ForEach-Object { $_.Group | Get-DscConfigurationString -ConfigurationName $_.Name }
+        $policyItems = Get-ChildItem -Path $Path -File -Filter *.PolicyRules | Get-G2DObjectFromPolicyRulesFile
+        if ($PSCmdlet.ParameterSetName -eq 'pester')
+        {
+            $policyItems | Group-Object -Property PolicyName | ForEach-Object {
+                $cName = $_.Name
+                [ValidationItem]::new(
+                    ($_.Group | Get-G2DPesterString -ConfigurationName $cName),
+                    $cName,
+                    'Pester'
+                )
+            }
+        }
+
+        if ($PSCmdlet.ParameterSetName -eq 'dsc')
+        {
+            $policyItems | Group-Object -Property PolicyName | ForEach-Object {
+                $cName = $_.Name -replace '\s'
+                [ValidationItem]::new(
+                    ($_.Group | Get-G2DDscConfigurationString -ConfigurationName $cName),
+                    $cName,
+                    'Dsc'
+                )
+            }
+        }
+
+        return
     }
 
     # Group by layer
@@ -83,14 +120,17 @@ function ConvertTo-DscConfiguration
 
         foreach ($innerLayer in @($layer))
         {
-            if (Get-Variable -Name "$($innerLayer)items" -ErrorAction SilentlyContinue) { continue }
+            if (Get-Variable -Name "$($innerLayer)items" -ErrorAction SilentlyContinue)
+            {
+                continue
+            }
 
-            $policyItems = $gpoFiles.$innerLayer | Get-ObjectFromPolicyRulesFile
+            $policyItems = $gpoFiles.$innerLayer | Get-G2DObjectFromPolicyRulesFile
             $null = New-Variable -Name "$($innerLayer)items" -Value @{
-                RegistryItems        = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'RegistryItem' } | Sort-Object -Unique -Property Key,ValueName
-                UserRightsAssignment = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'UserRightsAssignment' } | Sort-Object -Unique -Property Policy
-                SecurityOptions      = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'SecurityOptions' } | Sort-Object -Unique -Property SettingName
-                AuditPol             = $policyItems | Where-Object -FilterScript {$_.ObjectType -eq 'AuditPol' } | Sort-Object -Unique -Property AuditFlag
+                RegistryItems        = $policyItems | Where-Object -FilterScript { $_.ObjectType -eq 'RegistryItem' } | Sort-Object -Unique -Property Key, ValueName
+                UserRightsAssignment = $policyItems | Where-Object -FilterScript { $_.ObjectType -eq 'UserRightsAssignment' } | Sort-Object -Unique -Property Policy
+                SecurityOptions      = $policyItems | Where-Object -FilterScript { $_.ObjectType -eq 'SecurityOptions' } | Sort-Object -Unique -Property SettingName
+                AuditPol             = $policyItems | Where-Object -FilterScript { $_.ObjectType -eq 'AuditPol' } | Sort-Object -Unique -Property AuditFlag
             }
 
             if ($layer[0] -ne $innerLayer)
@@ -133,6 +173,23 @@ function ConvertTo-DscConfiguration
         }
 
         $layer0Clone = Get-Variable -Name "$($layer[0])items" -ValueOnly
-        Get-DscConfigurationString -ConfigurationItem ($layer0Clone.RegistryItems + $layer0Clone.SecurityOptions + $layer0Clone.UserRightsAssignment + $layer0Clone.AuditPol) -ConfigurationName $exportName
+
+        if ($PSCmdlet.ParameterSetName -eq 'pester')
+        {
+            [ValidationItem]::new(
+                (Get-G2DPesterString -ConfigurationItem ($layer0Clone.RegistryItems + $layer0Clone.SecurityOptions + $layer0Clone.UserRightsAssignment + $layer0Clone.AuditPol) -ConfigurationName $exportName),
+                $exportName,
+                'Pester'
+            )
+        }
+
+        if ($PSCmdlet.ParameterSetName -eq 'dsc')
+        {
+            [ValidationItem]::new(
+                (Get-G2DDscConfigurationString -ConfigurationItem ($layer0Clone.RegistryItems + $layer0Clone.SecurityOptions + $layer0Clone.UserRightsAssignment + $layer0Clone.AuditPol) -ConfigurationName $exportName ),
+                ($exportName -replace '\s'),
+                'Dsc'
+            )
+        }
     }
 }

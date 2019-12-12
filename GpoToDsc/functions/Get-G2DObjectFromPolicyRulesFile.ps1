@@ -6,11 +6,11 @@
 .PARAMETER Path
     The full file path to each files
 .EXAMPLE
-    Get-ChildItem | Get-ObjectFromPolicyRulesFile
+    Get-ChildItem | Get-G2DObjectFromPolicyRulesFile
 
     Gets a bunch of objects contained in PolicyRules files
 #>
-function Get-ObjectFromPolicyRulesFile
+function Get-G2DObjectFromPolicyRulesFile
 {
     param
     (

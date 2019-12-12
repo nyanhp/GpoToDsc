@@ -38,7 +38,7 @@
     # FormatsToProcess = @('xml\GpoToDsc.Format.ps1xml')
 	
     # Functions to export from this module
-    FunctionsToExport = 'Export-DscConfiguration', 'Get-ObjectFromPolicyRulesFile', 'Get-DscConfigurationString', 'ConvertTo-DscConfiguration', 'Get-PesterString'
+    FunctionsToExport = 'ConvertTo-G2DValidation', 'Export-G2DPesterSuite', 'Export-G2DValidation', 'Get-G2DDscConfigurationString', 'Get-G2DObjectFromPolicyRulesFile', 'Get-G2DPesterString', 'New-G2DArchive'
 	
     # Cmdlets to export from this module
     CmdletsToExport   = ''
