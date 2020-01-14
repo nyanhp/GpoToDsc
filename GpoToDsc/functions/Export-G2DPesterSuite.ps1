@@ -41,26 +41,26 @@ function Export-G2DPesterSuite
         {
             $null = New-Item -ItemType Directory -Path $Path -Force
         }
+
+        if (-not (Test-Path $Path))
+        {
+            Stop-PSFFunction -Message "Skipping Pester export because $Path is not present and -Force has not been used." -EnableException $true
+        }
     }
     
     process
     {
-        if (-not (Test-Path $Path))
-        {
-            Write-PSFMessage "Skipping configuration because $Path is not present and -Force has not been used."
-            break
-        }
-        
         if ($Configuration.ValidationType -ne 'Pester')
         {
             Write-PSFMessage "Skipping configuration because $($Configuration.ConfigurationName) is not of type Pester"
-            break
+            return
         }
 
         if ($PSCmdlet.ShouldProcess($Configuration.ConfigurationName, 'Export validation'))
         {
             $scriptName = Join-Path -Path $Path -ChildPath "$($Configuration.ConfigurationName).tests.ps1"
             $Configuration | Set-Content -Path $scriptName
+            Get-Item -Path $scriptName
         }
     }
 }

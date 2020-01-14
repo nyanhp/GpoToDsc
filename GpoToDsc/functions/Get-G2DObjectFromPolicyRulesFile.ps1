@@ -75,7 +75,9 @@ function Get-G2DObjectFromPolicyRulesFile
                     PolicyName   = $policyName
                 }
 
-                $existingItem = $resultList | Where-Object -FilterScript { $_.ObjectType -eq 'RegistryItem' -and $_.Key -eq $regKey }
+                $existingItem = $resultList | Where-Object -FilterScript {
+                    $_.ObjectType -eq 'RegistryItem' -and ($_.Key -eq $regKey -and $_.ValueName -eq $(Split-Path -Leaf -Path $split1[0]))
+                }
 
                 if ($null -ne $existingItem)
                 {
