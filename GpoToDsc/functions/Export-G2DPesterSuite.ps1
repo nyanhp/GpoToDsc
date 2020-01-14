@@ -49,7 +49,7 @@ function Export-G2DPesterSuite
     }
     
     process
-    {        
+    {
         if ($Configuration.ValidationType -ne 'Pester')
         {
             Write-PSFMessage "Skipping configuration because $($Configuration.ConfigurationName) is not of type Pester"
