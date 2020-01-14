@@ -12,11 +12,11 @@ mkdir -force "$PSScriptRoot\..\GpoToDsc\library"
 Add-Type -TypeDefinition @'
 public class ValidationItem
 {
-    string ValidationString {get; set;}
-    string ConfigurationName {get; set;}
-    string ValidationType {get; set;}
+    public string ValidationString {get; set;}
+    public string ConfigurationName {get; set;}
+    public string ValidationType {get; set;}
 
-    ValidationItem (string valString, string confName, string valType)
+    public ValidationItem (string valString, string confName, string valType)
     {
         ValidationString = valString;
         ConfigurationName = confName;
@@ -28,4 +28,4 @@ public class ValidationItem
         return ValidationString;
     }
 }
-'@ -OutputAssembly "$PSScriptRoot\..\GpoToDsc\library\lib.dll"
+'@ -OutputAssembly "$PSScriptRoot\..\GpoToDsc\library\gpotodsc.dll"
