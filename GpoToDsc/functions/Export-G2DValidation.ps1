@@ -18,7 +18,7 @@
 
     Converts a bunch of PolicyRules files to DSC code and exports all configurations and their MOFs
 #>
-function Export-G2DConfiguration
+function Export-G2DValidation
 {
     [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
     param
@@ -48,6 +48,12 @@ function Export-G2DConfiguration
         if (-not (Test-Path $Path))
         {
             Write-PSFMessage "Skipping configuration because $Path is not present and -Force has not been used."
+            break
+        }
+
+        if ($Configuration.ValidationType -ne 'Dsc')
+        {
+            Write-PSFMessage "Skipping configuration because $($Configuration.ConfigurationName) is not of type DSC"
             break
         }
         

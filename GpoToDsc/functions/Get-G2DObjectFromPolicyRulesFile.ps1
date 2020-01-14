@@ -20,6 +20,11 @@ function Get-G2DObjectFromPolicyRulesFile
         $Path
     )
 
+    begin
+    {
+        $mapping = Get-PSFConfigValue -FullName GpoToDsc.AuditPolMapping
+    }
+
     process
     {
         foreach ($file in $Path)

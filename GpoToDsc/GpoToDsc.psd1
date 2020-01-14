@@ -27,7 +27,7 @@
     RequiredModules   = @(@{ ModuleName = 'PSFramework'; ModuleVersion = '1.0.59' })
 	
     # Assemblies that must be loaded prior to importing this module
-    RequiredAssemblies = @('library\lib.dll')
+    RequiredAssemblies = @('library\gpotodsc.dll')
 	
     # Type files (.ps1xml) to be loaded when importing this module
     # Expensive for import time, no more than one should be used.

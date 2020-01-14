@@ -51,6 +51,12 @@ function Export-G2DPesterSuite
             break
         }
         
+        if ($Configuration.ValidationType -ne 'Pester')
+        {
+            Write-PSFMessage "Skipping configuration because $($Configuration.ConfigurationName) is not of type Pester"
+            break
+        }
+
         if ($PSCmdlet.ShouldProcess($Configuration.ConfigurationName, 'Export validation'))
         {
             $scriptName = Join-Path -Path $Path -ChildPath "$($Configuration.ConfigurationName).tests.ps1"
