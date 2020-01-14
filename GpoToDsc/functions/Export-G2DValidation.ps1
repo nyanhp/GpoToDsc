@@ -41,20 +41,19 @@ function Export-G2DValidation
         {
             $null = New-Item -ItemType Directory -Path $Path -Force
         }
+
+        if (-not (Test-Path $Path))
+        {
+            Stop-PSFFunction -Message "Skipping MOF export because $Path is not present and -Force has not been used." -EnableException $true
+        }
     }
     
     process
     {
-        if (-not (Test-Path $Path))
-        {
-            Write-PSFMessage "Skipping configuration because $Path is not present and -Force has not been used."
-            break
-        }
-
         if ($Configuration.ValidationType -ne 'Dsc')
         {
             Write-PSFMessage "Skipping configuration because $($Configuration.ConfigurationName) is not of type DSC"
-            break
+            return
         }
         
         $configurationScript = [scriptblock]::Create($Configuration.ToString())
