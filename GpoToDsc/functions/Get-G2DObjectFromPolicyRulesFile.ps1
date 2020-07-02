@@ -6,11 +6,11 @@
 .PARAMETER Path
     The full file path to each files
 .EXAMPLE
-    Get-ChildItem | Get-ObjectFromPolicyRulesFile
+    Get-ChildItem | Get-G2DObjectFromPolicyRulesFile
 
     Gets a bunch of objects contained in PolicyRules files
 #>
-function Get-ObjectFromPolicyRulesFile
+function Get-G2DObjectFromPolicyRulesFile
 {
     param
     (
@@ -19,6 +19,11 @@ function Get-ObjectFromPolicyRulesFile
         [string[]]
         $Path
     )
+
+    begin
+    {
+        $mapping = Get-PSFConfigValue -FullName GpoToDsc.AuditPolMapping
+    }
 
     process
     {
@@ -70,7 +75,9 @@ function Get-ObjectFromPolicyRulesFile
                     PolicyName   = $policyName
                 }
 
-                $existingItem = $resultList | Where-Object -FilterScript { $_.ObjectType -eq 'RegistryItem' -and $_.Key -eq $regKey }
+                $existingItem = $resultList | Where-Object -FilterScript {
+                    $_.ObjectType -eq 'RegistryItem' -and ($_.Key -eq $regKey -and $_.ValueName -eq $(Split-Path -Leaf -Path $split1[0]))
+                }
 
                 if ($null -ne $existingItem)
                 {
@@ -111,6 +118,11 @@ function Get-ObjectFromPolicyRulesFile
                 }
 
                 $regKey = "HKEY_LOCAL_MACHINE\$($item.Key)"
+
+                if ($valueType -eq 'MultiString' -and [string]::IsNullOrWhiteSpace($valueData))
+                {
+                    $valueData = @()
+                }
 
                 $result = [PSCustomObject]@{
                     ResourceName = "Registry '$($policyName)_$($item.Value)_$((New-Guid).Guid)'"

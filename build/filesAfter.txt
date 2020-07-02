@@ -2,5 +2,4 @@
 # In the order they are loaded during postimport
 
 internal\configurations\*.ps1
-internal\scriptblocks\*.ps1
 internal\scripts\license.ps1

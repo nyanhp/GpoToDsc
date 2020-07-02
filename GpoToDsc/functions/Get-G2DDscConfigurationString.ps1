@@ -8,11 +8,11 @@
 .PARAMETER ConfigurationName
     The name of the configuration
 .EXAMPLE
-    Get-ChildItem -Path . -File | Get-ObjectFromPolicyRulesFile | Group-Object -Property PolicyName | ForEach-Object { $_.Group | Get-DscConfigurationString -ConfigurationName $_.Name }
+    Get-ChildItem -Path . -File | Get-G2DObjectFromPolicyRulesFile | Group-Object -Property PolicyName | ForEach-Object { $_.Group | Get-G2DDscConfigurationString -ConfigurationName $_.Name }
     
     Convert an entire folder of PolicyRules files to DSC configuration strings
 #>
-function Get-DscConfigurationString
+function Get-G2DDscConfigurationString
 {
     param
     (
@@ -28,7 +28,7 @@ function Get-DscConfigurationString
     begin
     {
         $string = [System.Text.StringBuilder]::new()
-        $null = $string.AppendLine( "configuration $($ConfigurationName)" )
+        $null = $string.AppendLine( "configuration '$($ConfigurationName)'" )
         $null = $string.AppendLine( '{' )
         $null = $string.AppendLine( "     Import-DscResource -ModuleName PSDesiredStateConfiguration" )
         $null = $string.AppendLine( "     Import-DscResource -ModuleName SecurityPolicyDsc" )

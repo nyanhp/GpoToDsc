@@ -3,7 +3,7 @@
     ModuleToProcess   = 'GpoToDsc.psm1'
 	
     # Version number of this module.
-    ModuleVersion     = '1.0.0'
+    ModuleVersion     = '1.1.0'
 	
     # ID used to uniquely identify this module
     GUID              = '13049ea4-96d6-4ab1-91c6-7c895c2ae66f'
@@ -24,10 +24,10 @@
     PowerShellVersion = '5.0'
 	
     # Modules that must be imported into the global environment prior to importing this module
-    RequiredModules   = @(@{ ModuleName = 'PSFramework'; ModuleVersion = '1.0.19' })
+    RequiredModules   = @(@{ ModuleName = 'PSFramework'; ModuleVersion = '1.0.59' })
 	
     # Assemblies that must be loaded prior to importing this module
-    # RequiredAssemblies = @('bin\GpoToDsc.dll')
+    RequiredAssemblies = @('library\gpotodsc.dll')
 	
     # Type files (.ps1xml) to be loaded when importing this module
     # Expensive for import time, no more than one should be used.
@@ -38,7 +38,7 @@
     # FormatsToProcess = @('xml\GpoToDsc.Format.ps1xml')
 	
     # Functions to export from this module
-    FunctionsToExport = 'Export-DscConfiguration', 'Get-ObjectFromPolicyRulesFile', 'Get-DscConfigurationString', 'ConvertTo-DscConfiguration'
+    FunctionsToExport = 'ConvertTo-G2DValidation', 'Export-G2DPesterSuite', 'Export-G2DValidation', 'Get-G2DDscConfigurationString', 'Get-G2DObjectFromPolicyRulesFile', 'Get-G2DPesterString', 'New-G2DArchive'
 	
     # Cmdlets to export from this module
     CmdletsToExport   = ''
