@@ -39,7 +39,7 @@ Param (
 	$CommandPath = @("$global:testroot\..\functions", "$global:testroot\..\internal\functions"),
 	
 	[string]
-	$ModuleName = "YoloModulo",
+	$ModuleName = "GpoToDsc",
 	
 	[string]
 	$ExceptionsFile = "$global:testroot\general\Help.Exceptions.ps1"
