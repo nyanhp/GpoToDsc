@@ -8,7 +8,7 @@
 
 
 
-Describe "Testing localization strings" {
+Describe "Testing localization strings" -Skip {
 	$moduleRoot = (Get-Module GpoToDsc).ModuleBase
 	$stringsResults = Export-PSMDString -ModuleRoot $moduleRoot
 	$exceptions = & "$global:testroot\general\strings.Exceptions.ps1"

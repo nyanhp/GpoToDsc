@@ -14,7 +14,7 @@
 #>
 function New-G2DArchive
 {
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Low')]
     param
     (
         [Parameter(Mandatory)]
@@ -31,21 +31,24 @@ function New-G2DArchive
         $tempFolder = Join-Path -Path $env:TEMP -ChildPath GpoToDsc
         $moduleFolder = Join-Path -Path $tempFolder -ChildPath Modules
 
-        if (Test-Path $tempFolder)
+        is ($PSCmdlet.ShouldProcess('Creating folder', $moduleFolder))
         {
-            Remove-Item -Force -Recurse -Path $tempFolder
-        }
+            if (Test-Path $tempFolder)
+            {
+                Remove-Item -Force -Recurse -Path $tempFolder
+            }
 
-        $null = New-Item -Path $moduleFolder -ItemType Directory -Force
-        Save-Module -Name AuditPolicyDsc, SecurityPolicyDsc -Path $moduleFolder -Repository PSGallery
+            $null = New-Item -Path $moduleFolder -ItemType Directory -Force
+            Save-Module -Name AuditPolicyDsc, SecurityPolicyDsc -Path $moduleFolder -Repository PSGallery
 
-        $archivePath = if (-not (Test-Path -PathType Leaf -Path $Path))
-        {
-            Join-Path -Path $Path -ChildPath 'G2DArchive.zip'
-        }
-        else
-        {
-            $Path
+            $archivePath = if (-not (Test-Path -PathType Leaf -Path $Path))
+            {
+                Join-Path -Path $Path -ChildPath 'G2DArchive.zip'
+            }
+            else
+            {
+                $Path
+            }
         }
     }
 
@@ -53,30 +56,33 @@ function New-G2DArchive
     {
         if ($ValidationObject.ValidationType -contains 'Pester' -and -not (Test-Path -Path (Join-Path -Path $moduleFolder -ChildPath Pester)))
         {
-            Save-Module -Name Pester,Format-Pester -Path $moduleFolder -Repository PSGallery
+            Save-Module -Name Pester, Format-Pester -Path $moduleFolder -Repository PSGallery
         }
 
-        foreach ($vObject in $ValidationObject)
+        if ($PSCmdlet.ShouldProcess('Exporting validation things', 'ValidationCollection'))
         {
-            $targetPath = Join-Path -Path $tempFolder -ChildPath $vObject.ValidationType
-            if (-not (Test-Path -Path $targetPath))
+            foreach ($vObject in $ValidationObject)
             {
-                $null = New-Item -ItemType Directory -Path $targetPath
-            }
+                $targetPath = Join-Path -Path $tempFolder -ChildPath $vObject.ValidationType
+                if (-not (Test-Path -Path $targetPath))
+                {
+                    $null = New-Item -ItemType Directory -Path $targetPath
+                }
 
-            switch ($vObject.ValidationType)
-            {
-                'Pester'
+                switch ($vObject.ValidationType)
                 {
-                    $null = Export-G2DPesterSuite -Path $targetPath -Configuration $vObject
-                }
-                'Dsc'
-                {
-                    $null = Export-G2DConfiguration -Path $targetPath -Configuration $vObject
-                }
-                default
-                {
-                    throw 'What the hell happened...'
+                    'Pester'
+                    {
+                        $null = Export-G2DPesterSuite -Path $targetPath -Configuration $vObject
+                    }
+                    'Dsc'
+                    {
+                        $null = Export-G2DConfiguration -Path $targetPath -Configuration $vObject
+                    }
+                    default
+                    {
+                        throw 'What the hell happened...'
+                    }
                 }
             }
         }
@@ -84,7 +90,9 @@ function New-G2DArchive
 
     end
     {
-
-        Compress-Archive -Path $tempFolder\* -DestinationPath $archivePath -Force
+        if ($PSCmdlet.ShouldProcess('Saving archive', $archivePath))
+        {
+            Compress-Archive -Path $tempFolder\* -DestinationPath $archivePath -Force
+        )
     }
 }
