@@ -19,9 +19,9 @@ Write-PSFMessage -Level Important -Message "Importing Module"
 $global:testroot = $PSScriptRoot
 $global:__pester_data = @{ }
 
-Remove-Module YoloModulo -ErrorAction Ignore
-Import-Module "$PSScriptRoot\..\YoloModulo.psd1"
-Import-Module "$PSScriptRoot\..\YoloModulo.psm1" -Force
+Remove-Module GpoToDsc -ErrorAction Ignore
+Import-Module "$PSScriptRoot\..\GpoToDsc.psd1"
+Import-Module "$PSScriptRoot\..\GpoToDsc.psm1" -Force
 
 # Need to import explicitly so we can use the configuration class
 Import-Module Pester
