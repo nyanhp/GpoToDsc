@@ -1,90 +1,103 @@
 ﻿param (
-    $TestGeneral = $true,
+	$TestGeneral = $true,
 	
-    $TestFunctions = $true,
+	$TestFunctions = $true,
 	
-    [ValidateSet('None', 'Default', 'Passed', 'Failed', 'Pending', 'Skipped', 'Inconclusive', 'Describe', 'Context', 'Summary', 'Header', 'Fails', 'All')]
-    $Show = "None",
+	[ValidateSet('None', 'Normal', 'Detailed', 'Diagnostic')]
+	[Alias('Show')]
+	$Output = "None",
 	
-    $Include = "*",
+	$Include = "*",
 	
-    $Exclude = ""
+	$Exclude = ""
 )
 
 Write-PSFMessage -Level Important -Message "Starting Tests"
 
 Write-PSFMessage -Level Important -Message "Importing Module"
 
-Remove-Module GpoToDsc -ErrorAction Ignore
-Import-Module "$PSScriptRoot\..\GpoToDsc.psd1"
-Import-Module "$PSScriptRoot\..\GpoToDsc.psm1" -Force
+$global:testroot = $PSScriptRoot
+$global:__pester_data = @{ }
 
-Write-PSFMessage -Level Important -Message "Creating test result folder"
-$null = New-Item -Path "$PSScriptRoot\..\.." -Name TestResults -ItemType Directory -Force
+Remove-Module YoloModulo -ErrorAction Ignore
+Import-Module "$PSScriptRoot\..\YoloModulo.psd1"
+Import-Module "$PSScriptRoot\..\YoloModulo.psm1" -Force
+
+# Need to import explicitly so we can use the configuration class
+Import-Module Pester
+
+
 
 $totalFailed = 0
 $totalRun = 0
 
 $testresults = @()
+$config = [PesterConfiguration]::Default
+
 
 #region Run General Tests
 if ($TestGeneral)
 {
-    Write-PSFMessage -Level Important -Message "Modules imported, proceeding with general tests"
-    foreach ($file in (Get-ChildItem "$PSScriptRoot\general" -Filter "*.Tests.ps1"))
-    {
-        Write-PSFMessage -Level Significant -Message "  Executing <c='em'>$($file.Name)</c>"
-        $TestOuputFile = Join-Path "$PSScriptRoot\..\..\TestResults" "TEST-$($file.BaseName).xml"
-        $results = Invoke-Pester -Script $file.FullName -Show $Show -PassThru -OutputFile $TestOuputFile -OutputFormat NUnitXml
-		if ($env:APPVEYOR -eq 'true') { (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", $TestOuputFile ) }
-        foreach ($result in $results)
-        {
-            $totalRun += $result.TotalCount
-            $totalFailed += $result.FailedCount
-            $result.TestResult | Where-Object { -not $_.Passed } | ForEach-Object {
-                $name = $_.Name
-                $testresults += [pscustomobject]@{
-                    Describe = $_.Describe
-                    Context  = $_.Context
-                    Name     = "It $name"
-                    Result   = $_.Result
-                    Message  = $_.FailureMessage
-                }
-            }
-        }
-    }
+	Write-PSFMessage -Level Important -Message "Modules imported, proceeding with general tests"
+	foreach ($file in (Get-ChildItem "$PSScriptRoot\general" | Where-Object Name -like "*.Tests.ps1"))
+	{
+		if ($file.Name -notlike $Include) { continue }
+		if ($file.Name -like $Exclude) { continue }
+
+		Write-PSFMessage -Level Significant -Message "  Executing <c='em'>$($file.Name)</c>"
+		$config.TestResult.OutputPath = Join-Path "$PSScriptRoot\..\..\TestResults" "TEST-$($file.BaseName).xml"
+		$config.Run.Path = $file.FullName
+		$config.Run.PassThru = $true
+		$config.Output.Verbosity = $Output
+    	$results = Invoke-Pester -Configuration $config
+		foreach ($result in $results)
+		{
+			$totalRun += $result.TotalCount
+			$totalFailed += $result.FailedCount
+			$result.Tests | Where-Object Result -ne 'Passed' | ForEach-Object {
+				$testresults += [pscustomobject]@{
+					Block    = $_.Block
+					Name	 = "It $($_.Name)"
+					Result   = $_.Result
+					Message  = $_.ErrorRecord.DisplayErrorMessage
+				}
+			}
+		}
+	}
 }
 #endregion Run General Tests
+
+$global:__pester_data.ScriptAnalyzer | Out-Host
 
 #region Test Commands
 if ($TestFunctions)
 {
-    Write-PSFMessage -Level Important -Message "Proceeding with individual tests"
-    foreach ($file in (Get-ChildItem "$PSScriptRoot\functions" -Recurse -File -Filter "*Tests.ps1"))
-    {
-        if ($file.Name -notlike $Include) { continue }
-        if ($file.Name -like $Exclude) { continue }
+	Write-PSFMessage -Level Important -Message "Proceeding with individual tests"
+	foreach ($file in (Get-ChildItem "$PSScriptRoot\functions" -Recurse -File | Where-Object Name -like "*Tests.ps1"))
+	{
+		if ($file.Name -notlike $Include) { continue }
+		if ($file.Name -like $Exclude) { continue }
 		
-        Write-PSFMessage -Level Significant -Message "  Executing $($file.Name)"
-        $TestOuputFile = Join-Path "$PSScriptRoot\..\..\TestResults" "TEST-$($file.BaseName).xml"
-		$results = Invoke-Pester -Script $file.FullName -Show $Show -PassThru -OutputFile $TestOuputFile -OutputFormat NUnitXml
-		if ($env:APPVEYOR -eq 'true') { (New-Object 'System.Net.WebClient').UploadFile("https://ci.appveyor.com/api/testresults/nunit/$($env:APPVEYOR_JOB_ID)", $TestOuputFile ) }
-        foreach ($result in $results)
-        {
-            $totalRun += $result.TotalCount
-            $totalFailed += $result.FailedCount
-            $result.TestResult | Where-Object { -not $_.Passed } | ForEach-Object {
-                $name = $_.Name
-                $testresults += [pscustomobject]@{
-                    Describe = $_.Describe
-                    Context  = $_.Context
-                    Name     = "It $name"
-                    Result   = $_.Result
-                    Message  = $_.FailureMessage
-                }
-            }
-        }
-    }
+		Write-PSFMessage -Level Significant -Message "  Executing $($file.Name)"
+		$config.TestResult.OutputPath = Join-Path "$PSScriptRoot\..\..\TestResults" "TEST-$($file.BaseName).xml"
+		$config.Run.Path = $file.FullName
+		$config.Run.PassThru = $true
+		$config.Output.Verbosity = $Output
+    	$results = Invoke-Pester -Configuration $config
+		foreach ($result in $results)
+		{
+			$totalRun += $result.TotalCount
+			$totalFailed += $result.FailedCount
+			$result.Tests | Where-Object Result -ne 'Passed' | ForEach-Object {
+				$testresults += [pscustomobject]@{
+					Block    = $_.Block
+					Name	 = "It $($_.Name)"
+					Result   = $_.Result
+					Message  = $_.ErrorRecord.DisplayErrorMessage
+				}
+			}
+		}
+	}
 }
 #endregion Test Commands
 
@@ -95,5 +108,5 @@ else { Write-PSFMessage -Level Critical -Message "<c='em'>$totalFailed tests</c>
 
 if ($totalFailed -gt 0)
 {
-    throw "$totalFailed / $totalRun tests failed!"
+	throw "$totalFailed / $totalRun tests failed!"
 }
